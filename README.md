@@ -16,7 +16,6 @@
 ![Settings](screenshots/settings.png)
 *Secure API key management and system configuration*
 
-> **📸 Contributing Screenshots**: To add or update screenshots, please see the [screenshots directory](screenshots/README.md) for detailed guidelines and requirements.
 
 ## 🚀 Features
 
