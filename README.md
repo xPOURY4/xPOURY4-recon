@@ -1,8 +1,10 @@
 # xPOURY4 Recon - Elite Cyber Intelligence & Digital Forensics Platform
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://python.org)
+[![PyPI Version](https://img.shields.io/pypi/v/xPOURY4-recon.svg)](https://pypi.org/project/xPOURY4-recon/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/xPOURY4-recon.svg)](https://pypi.org/project/xPOURY4-recon/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)](https://github.com/xPOURY4/xPOURY4-recon)
+[![Version](https://img.shields.io/badge/version-1.0.1-orange.svg)](https://github.com/xPOURY4/xPOURY4-recon)
 
 **xPOURY4 Recon** is a next-generation OSINT (Open Source Intelligence) framework engineered for cybersecurity professionals, digital investigators, and ethical hackers. This elite platform automates comprehensive intelligence gathering and correlation analysis across multiple attack vectors including GitHub, domains, telecommunications, professional networks, and global internet infrastructure.
 
@@ -15,7 +17,20 @@
 ### ⚙️ Configuration Management
 ![Settings](screenshots/settings.png)
 *Secure API key management and system configuration*
+## ⚡ Quick Start
 
+Get started in seconds with PyPI:
+
+```bash
+# Install the package
+pip install xPOURY4-recon
+
+# Run the tool
+xpoury4-recon
+
+# Or launch web interface
+xpoury4-recon --web
+```
 
 ## 🚀 Features
 
@@ -37,28 +52,30 @@
 
 ## 📦 Installation
 
-### Prerequisites
-- Python 3.8 or higher
-- pip package manager
+### 🚀 PyPI Installation (Recommended)
 
-### Quick Installation
+Install directly from PyPI with a single command:
+
+```bash
+# Basic installation
+pip install xPOURY4-recon
+
+# With web interface support
+pip install xPOURY4-recon[web]
+
+# With development tools
+pip install xPOURY4-recon[dev]
+
+# Full installation with all extras
+pip install xPOURY4-recon[all]
+```
+
+### 🛠️ Development Installation
+
+For development or customization:
 
 ```bash
 # Clone the repository
-git clone https://github.com/xPOURY4/xPOURY4-recon.git
-cd xPOURY4-recon
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the application
-python main.py
-```
-
-### Development Installation
-
-```bash
-# Clone and setup development environment
 git clone https://github.com/xPOURY4/xPOURY4-recon.git
 cd xPOURY4-recon
 
@@ -66,16 +83,39 @@ cd xPOURY4-recon
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Install development dependencies
+# Install in development mode
 pip install -e .
 ```
+
+### Prerequisites
+- Python 3.8 or higher
+- pip package manager
 
 ## 🎯 Usage
 
 ### Command Line Interface
+
+After installation via PyPI:
+
+```bash
+# Interactive CLI mode
+xpoury4-recon
+# or
+xpoury4
+
+# Web interface mode
+xpoury4-recon --web
+
+# Show configuration
+xpoury4-recon --config
+
+# Show version
+xpoury4-recon --version
+```
+
+### Development Usage
+
+If installed from source:
 
 ```bash
 # Interactive CLI mode
@@ -96,6 +136,10 @@ python main.py --version
 Launch the web interface for a modern, user-friendly experience:
 
 ```bash
+# PyPI installation
+xpoury4-recon --web
+
+# Development installation
 python main.py --web
 ```
 
@@ -105,21 +149,33 @@ Then open your browser to `http://localhost:5000`
 
 #### GitHub Reconnaissance
 ```bash
-# Run GitHub investigation
+# PyPI installation
+xpoury4-recon
+# Select option 1 and enter username
+
+# Development installation
 python main.py
 # Select option 1 and enter username
 ```
 
 #### Domain Analysis
 ```bash
-# Comprehensive domain investigation
+# PyPI installation
+xpoury4-recon
+# Select option 2 and enter domain
+
+# Development installation
 python main.py
 # Select option 2 and enter domain
 ```
 
 #### Phone Number OSINT
 ```bash
-# Phone number investigation
+# PyPI installation
+xpoury4-recon
+# Select option 3 and enter phone number with country code
+
+# Development installation
 python main.py
 # Select option 3 and enter phone number with country code
 ```
@@ -180,9 +236,12 @@ xPOURY4-recon/
 │   │   ├── __init__.py
 │   │   ├── app.py
 │   │   └── templates/
+│   ├── main.py
 │   └── __init__.py
 ├── main.py
 ├── requirements.txt
+├── setup.py
+├── pyproject.toml
 ├── config.yaml
 └── README.md
 ```
@@ -273,10 +332,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Author**: xPOURY4
 - **Email**: xpoury4@proton.me
 - **GitHub**: [@xPOURY4](https://github.com/xPOURY4)
+- **PyPI**: [xPOURY4-recon](https://pypi.org/project/xPOURY4-recon/)
 
 ## 🔄 Version History
 
-### v1.0.0 (Current)
+### v1.0.1 (Current)
+- **📚 Updated README.md** - Enhanced PyPI installation documentation
+- Added Quick Start section for immediate user engagement
+- Improved installation hierarchy (PyPI → Development)
+- Updated all usage examples for PyPI commands
+- Added PyPI badges and download statistics
+- Enhanced project structure documentation
+
+### v1.0.0
+- **🎉 Published on PyPI** - Now available via `pip install xPOURY4-recon`
 - Complete xPOURY4 branding implementation
 - Enhanced cybersecurity-focused UI with modern color scheme
 - Improved module descriptions and professional terminology
@@ -290,6 +359,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Enhanced error handling and logging
 - Modular design with plugin architecture
 - Comprehensive configuration management
+- Command-line tools: `xpoury4-recon` and `xpoury4`
 
 ## ⚠️ Disclaimer
 
