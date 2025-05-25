@@ -1,0 +1,28 @@
+# xPOURY4 Recon - Requirements
+# Author: xPOURY4
+
+# Core dependencies
+aiohttp>=3.8.0
+asyncio-throttle>=1.0.2
+requests>=2.28.0
+python-whois>=0.8.0
+phonenumbers>=8.13.0
+pyyaml>=6.0
+
+# Web UI dependencies
+flask>=2.3.0
+flask-socketio>=5.3.0
+werkzeug>=2.3.0
+
+# Optional API integrations
+shodan>=1.28.0
+
+# Development and testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0
+
+# Documentation
+sphinx>=5.0.0
+sphinx-rtd-theme>=1.2.0

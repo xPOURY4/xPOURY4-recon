@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}LinkedIn Reconnaissance - xPOURY4 Recon{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h1 class="display-5 mb-3">
+                    <i class="fab fa-linkedin me-3"></i>
+                    Professional Network Intelligence
+                </h1>
+                <p class="lead">Strategic LinkedIn reconnaissance and corporate intelligence gathering</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-search me-2"></i>Investigation Form</h5>
+            </div>
+            <div class="card-body">
+                <form id="linkedinForm">
+                    <div class="mb-3">
+                        <label for="first_name" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="first_name" name="first_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="last_name" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="last_name" name="last_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="company" class="form-label">Company (Optional)</label>
+                        <input type="text" class="form-control" id="company" name="company">
+                    </div>
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location (Optional)</label>
+                        <input type="text" class="form-control" id="location" name="location">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Generate Search Queries
+                    </button>
+                </form>
+                
+                <div id="loadingSpinner" class="loading-spinner text-center mt-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Generating search queries...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-link me-2"></i>Search URLs</h5>
+            </div>
+            <div class="card-body">
+                <div id="results" style="display: none;">
+                    <div id="searchUrls"></div>
+                </div>
+                <div id="noResults" class="text-center text-muted">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    <p>No search queries yet. Fill the form to generate LinkedIn search URLs.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('linkedinForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        first_name: document.getElementById('first_name').value,
+        last_name: document.getElementById('last_name').value,
+        company: document.getElementById('company').value,
+        location: document.getElementById('location').value
+    };
+    
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const results = document.getElementById('results');
+    const noResults = document.getElementById('noResults');
+    
+    loadingSpinner.style.display = 'block';
+    results.style.display = 'none';
+    noResults.style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/linkedin/investigate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        loadingSpinner.style.display = 'none';
+        
+        if (data.success) {
+            displayResults(data.data);
+            results.style.display = 'block';
+            showAlert('LinkedIn search queries generated successfully!', 'success');
+        } else {
+            showAlert(`Generation failed: ${data.error}`, 'danger');
+            noResults.style.display = 'block';
+        }
+    } catch (error) {
+        loadingSpinner.style.display = 'none';
+        noResults.style.display = 'block';
+        showAlert(`Error: ${error.message}`, 'danger');
+    }
+});
+
+function displayResults(data) {
+    const searchUrls = data.search_urls || [];
+    
+    const urlsList = searchUrls.map(item => `
+        <div class="mb-3 p-3 border rounded">
+            <h6>${item.description}</h6>
+            <p class="text-muted small">${item.query}</p>
+            <a href="${item.url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-external-link-alt me-1"></i>Open Search
+            </a>
+        </div>
+    `).join('');
+    
+    document.getElementById('searchUrls').innerHTML = `
+        <h6><i class="fab fa-google me-2"></i>Generated Search URLs (${searchUrls.length})</h6>
+        ${urlsList}
+    `;
+}
+</script>
+{% endblock %} 

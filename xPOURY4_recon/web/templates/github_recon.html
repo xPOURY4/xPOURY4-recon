@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}GitHub Reconnaissance - xPOURY4 Recon{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h1 class="display-5 mb-3">
+                    <i class="fab fa-github me-3"></i>
+                    GitHub Intelligence
+                </h1>
+                <p class="lead">Deep-dive analysis of developer profiles, code repositories, and organizational affiliations</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-search me-2"></i>Investigation Form</h5>
+            </div>
+            <div class="card-body">
+                <form id="githubForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">GitHub Username</label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               placeholder="Enter GitHub username" required>
+                        <div class="form-text">Enter the GitHub username to investigate</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Start Investigation
+                    </button>
+                </form>
+                
+                <div id="loadingSpinner" class="loading-spinner text-center mt-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Investigating GitHub user...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Information</h5>
+            </div>
+            <div class="card-body">
+                <h6>Intelligence Capabilities:</h6>
+                <ul>
+                    <li>Comprehensive developer profiling and behavioral analysis</li>
+                    <li>Repository forensics with code pattern recognition</li>
+                    <li>Private gist discovery and content analysis</li>
+                    <li>Corporate affiliation and organizational mapping</li>
+                    <li>Temporal activity analysis and commit patterns</li>
+                    <li>Technology stack profiling and expertise assessment</li>
+                    <li>Collaboration network analysis and team identification</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Results</h5>
+            </div>
+            <div class="card-body">
+                <div id="results" style="display: none;">
+                    <div id="profileInfo"></div>
+                    <div id="statisticsInfo"></div>
+                    <div id="repositoriesInfo"></div>
+                </div>
+                <div id="noResults" class="text-center text-muted">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    <p>No results yet. Start an investigation to see data here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('githubForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const results = document.getElementById('results');
+    const noResults = document.getElementById('noResults');
+    
+    // Show loading
+    loadingSpinner.style.display = 'block';
+    results.style.display = 'none';
+    noResults.style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/github/investigate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username: username })
+        });
+        
+        const data = await response.json();
+        
+        // Hide loading
+        loadingSpinner.style.display = 'none';
+        
+        if (data.success) {
+            displayResults(data.data);
+            results.style.display = 'block';
+            showAlert('GitHub investigation completed successfully!', 'success');
+        } else {
+            showAlert(`Investigation failed: ${data.error}`, 'danger');
+            noResults.style.display = 'block';
+        }
+    } catch (error) {
+        loadingSpinner.style.display = 'none';
+        noResults.style.display = 'block';
+        showAlert(`Error: ${error.message}`, 'danger');
+    }
+});
+
+function displayResults(data) {
+    const profile = data.profile || {};
+    const stats = data.statistics || {};
+    const repos = data.repositories || [];
+    
+    // Profile Information
+    document.getElementById('profileInfo').innerHTML = `
+        <div class="mb-4">
+            <h6><i class="fas fa-user me-2"></i>Profile Information</h6>
+            <div class="row">
+                <div class="col-sm-6"><strong>Name:</strong> ${profile.name || 'N/A'}</div>
+                <div class="col-sm-6"><strong>Username:</strong> ${profile.username || 'N/A'}</div>
+                <div class="col-sm-6"><strong>Location:</strong> ${profile.location || 'N/A'}</div>
+                <div class="col-sm-6"><strong>Company:</strong> ${profile.company || 'N/A'}</div>
+                <div class="col-sm-6"><strong>Email:</strong> ${profile.email || 'N/A'}</div>
+                <div class="col-sm-6"><strong>Blog:</strong> ${profile.blog || 'N/A'}</div>
+            </div>
+            ${profile.bio ? `<p class="mt-2"><strong>Bio:</strong> ${profile.bio}</p>` : ''}
+        </div>
+    `;
+    
+    // Statistics
+    document.getElementById('statisticsInfo').innerHTML = `
+        <div class="mb-4">
+            <h6><i class="fas fa-chart-line me-2"></i>Statistics</h6>
+            <div class="row">
+                <div class="col-sm-6"><strong>Public Repos:</strong> ${profile.public_repos || 0}</div>
+                <div class="col-sm-6"><strong>Total Stars:</strong> ${stats.total_stars || 0}</div>
+                <div class="col-sm-6"><strong>Total Forks:</strong> ${stats.total_forks || 0}</div>
+                <div class="col-sm-6"><strong>Followers:</strong> ${profile.followers || 0}</div>
+                <div class="col-sm-6"><strong>Following:</strong> ${profile.following || 0}</div>
+                <div class="col-sm-6"><strong>Public Gists:</strong> ${profile.public_gists || 0}</div>
+            </div>
+        </div>
+    `;
+    
+    // Top Repositories
+    if (repos.length > 0) {
+        const topRepos = repos.slice(0, 5);
+        const reposList = topRepos.map(repo => `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>${repo.name}</strong>
+                    <br><small class="text-muted">${repo.description || 'No description'}</small>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-primary rounded-pill">${repo.stargazers_count || 0} ⭐</span>
+                    <br><small class="text-muted">${repo.language || 'Unknown'}</small>
+                </div>
+            </li>
+        `).join('');
+        
+        document.getElementById('repositoriesInfo').innerHTML = `
+            <div class="mb-4">
+                <h6><i class="fas fa-code-branch me-2"></i>Top Repositories</h6>
+                <ul class="list-group">
+                    ${reposList}
+                </ul>
+            </div>
+        `;
+    }
+}
+</script>
+{% endblock %} 

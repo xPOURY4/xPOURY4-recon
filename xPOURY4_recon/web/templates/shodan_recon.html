@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Shodan Intelligence - xPOURY4 Recon{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-network-wired me-3"></i>
+                    Cyber Asset Discovery
+                </h1>
+                <p class="lead">Internet-wide asset discovery and vulnerability assessment</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-search me-2"></i>Investigation Form</h5>
+            </div>
+            <div class="card-body">
+                <form id="shodanForm">
+                    <div class="mb-3">
+                        <label for="target" class="form-label">Target</label>
+                        <input type="text" class="form-control" id="target" name="target" 
+                               placeholder="IP address or domain" required>
+                        <div class="form-text">Enter IP address or domain name</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Start Investigation
+                    </button>
+                </form>
+                
+                <div id="loadingSpinner" class="loading-spinner text-center mt-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Investigating target...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Information</h5>
+            </div>
+            <div class="card-body">
+                <h6>Discovery Capabilities:</h6>
+                <ul>
+                    <li>Global internet-connected device enumeration</li>
+                    <li>Advanced port scanning and service fingerprinting</li>
+                    <li>Real-time vulnerability identification and assessment</li>
+                    <li>Geospatial intelligence and infrastructure mapping</li>
+                    <li>ISP and organizational attribution analysis</li>
+                    <li>Industrial control system (ICS/SCADA) discovery</li>
+                    <li>IoT device identification and security assessment</li>
+                </ul>
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Note:</strong> Requires Shodan API key for full functionality.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Results</h5>
+            </div>
+            <div class="card-body">
+                <div id="results" style="display: none;">
+                    <div id="hostInfo"></div>
+                    <div id="servicesInfo"></div>
+                    <div id="vulnsInfo"></div>
+                </div>
+                <div id="noResults" class="text-center text-muted">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    <p>No results yet. Start an investigation to see data here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('shodanForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const target = document.getElementById('target').value;
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const results = document.getElementById('results');
+    const noResults = document.getElementById('noResults');
+    
+    loadingSpinner.style.display = 'block';
+    results.style.display = 'none';
+    noResults.style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/shodan/investigate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ target: target })
+        });
+        
+        const data = await response.json();
+        loadingSpinner.style.display = 'none';
+        
+        if (data.success) {
+            displayResults(data.data);
+            results.style.display = 'block';
+            showAlert('Shodan investigation completed successfully!', 'success');
+        } else {
+            showAlert(`Investigation failed: ${data.error}`, 'danger');
+            noResults.style.display = 'block';
+        }
+    } catch (error) {
+        loadingSpinner.style.display = 'none';
+        noResults.style.display = 'block';
+        showAlert(`Error: ${error.message}`, 'danger');
+    }
+});
+
+function displayResults(data) {
+    if (data.type === 'ip') {
+        const hostInfo = data.host_info || {};
+        const services = hostInfo.services || [];
+        const vulns = hostInfo.vulns || [];
+        
+        document.getElementById('hostInfo').innerHTML = `
+            <div class="mb-4">
+                <h6><i class="fas fa-server me-2"></i>Host Information</h6>
+                <div class="row">
+                    <div class="col-sm-6"><strong>IP:</strong> ${hostInfo.ip || 'N/A'}</div>
+                    <div class="col-sm-6"><strong>Country:</strong> ${hostInfo.country_name || 'N/A'}</div>
+                    <div class="col-sm-6"><strong>City:</strong> ${hostInfo.city || 'N/A'}</div>
+                    <div class="col-sm-6"><strong>ISP:</strong> ${hostInfo.isp || 'N/A'}</div>
+                    <div class="col-sm-6"><strong>Organization:</strong> ${hostInfo.organization || 'N/A'}</div>
+                    <div class="col-sm-6"><strong>Last Update:</strong> ${hostInfo.last_update || 'N/A'}</div>
+                </div>
+            </div>
+        `;
+        
+        if (services.length > 0) {
+            const servicesList = services.slice(0, 5).map(service => `
+                <li class="list-group-item">
+                    <strong>Port ${service.port}/${service.transport}</strong>
+                    <br><small>${service.product || 'Unknown'} ${service.version || ''}</small>
+                </li>
+            `).join('');
+            
+            document.getElementById('servicesInfo').innerHTML = `
+                <div class="mb-4">
+                    <h6><i class="fas fa-network-wired me-2"></i>Services (${services.length} found)</h6>
+                    <ul class="list-group">
+                        ${servicesList}
+                    </ul>
+                </div>
+            `;
+        }
+        
+        if (vulns.length > 0) {
+            document.getElementById('vulnsInfo').innerHTML = `
+                <div class="mb-4">
+                    <h6><i class="fas fa-exclamation-triangle me-2 text-danger"></i>Vulnerabilities (${vulns.length} found)</h6>
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            ${vulns.slice(0, 5).map(vuln => `<li>${vuln}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+    } else {
+        // Domain results
+        const stats = data.statistics || {};
+        
+        document.getElementById('hostInfo').innerHTML = `
+            <div class="mb-4">
+                <h6><i class="fas fa-globe me-2"></i>Domain Information</h6>
+                <div class="row">
+                    <div class="col-sm-6"><strong>Domain:</strong> ${data.target || 'N/A'}</div>
+                    <div class="col-sm-6"><strong>IPs Found:</strong> ${stats.total_ips || 0}</div>
+                    <div class="col-sm-6"><strong>Total Ports:</strong> ${stats.total_ports || 0}</div>
+                    <div class="col-sm-6"><strong>Vulnerabilities:</strong> ${stats.total_vulnerabilities || 0}</div>
+                </div>
+            </div>
+        `;
+    }
+}
+</script>
+{% endblock %} 

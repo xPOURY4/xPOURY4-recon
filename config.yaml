@@ -1,0 +1,38 @@
+api_keys:
+  github_token: ''
+  shodan_api_key: ''
+  virustotal_api_key: ''
+modules:
+  domain_recon:
+    dns_servers:
+    - 8.8.8.8
+    - 1.1.1.1
+    enabled: true
+    subdomain_sources:
+    - crt.sh
+    - threatcrowd
+    - virustotal
+  github_recon:
+    enabled: true
+    include_gists: true
+    include_repos: true
+    max_repos: 100
+  linkedin_recon:
+    auto_open_browser: true
+    enabled: true
+  phone_recon:
+    enabled: true
+    include_carrier: true
+    include_location: true
+settings:
+  max_retries: 3
+  output_format: json
+  rate_limit_delay: 1.0
+  results_directory: results
+  save_results: true
+  timeout: 30
+web_ui:
+  debug: false
+  host: 127.0.0.1
+  port: 5000
+  secret_key: 164d568706a43371730ac25ee7fbb52228246ba4261a0369

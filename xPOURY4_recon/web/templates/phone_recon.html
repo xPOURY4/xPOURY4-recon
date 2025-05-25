@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Phone Reconnaissance - xPOURY4 Recon{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-phone me-3"></i>
+                    Telecommunications Intelligence
+                </h1>
+                <p class="lead">Advanced phone number analysis and telecom infrastructure mapping</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-search me-2"></i>Investigation Form</h5>
+            </div>
+            <div class="card-body">
+                <form id="phoneForm">
+                    <div class="mb-3">
+                        <label for="phone_number" class="form-label">Phone Number</label>
+                        <input type="text" class="form-control" id="phone_number" name="phone_number" 
+                               placeholder="+1234567890" required>
+                        <div class="form-text">Enter phone number with country code</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Start Investigation
+                    </button>
+                </form>
+                
+                <div id="loadingSpinner" class="loading-spinner text-center mt-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Investigating phone number...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Results</h5>
+            </div>
+            <div class="card-body">
+                <div id="results" style="display: none;">
+                    <div id="phoneInfo"></div>
+                </div>
+                <div id="noResults" class="text-center text-muted">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    <p>No results yet. Start an investigation to see data here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('phoneForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const phone_number = document.getElementById('phone_number').value;
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const results = document.getElementById('results');
+    const noResults = document.getElementById('noResults');
+    
+    loadingSpinner.style.display = 'block';
+    results.style.display = 'none';
+    noResults.style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/phone/investigate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ phone_number: phone_number })
+        });
+        
+        const data = await response.json();
+        loadingSpinner.style.display = 'none';
+        
+        if (data.success) {
+            displayResults(data.data);
+            results.style.display = 'block';
+            showAlert('Phone investigation completed successfully!', 'success');
+        } else {
+            showAlert(`Investigation failed: ${data.error}`, 'danger');
+            noResults.style.display = 'block';
+        }
+    } catch (error) {
+        loadingSpinner.style.display = 'none';
+        noResults.style.display = 'block';
+        showAlert(`Error: ${error.message}`, 'danger');
+    }
+});
+
+function displayResults(data) {
+    const location = data.location || {};
+    const carrier = data.carrier || {};
+    
+    document.getElementById('phoneInfo').innerHTML = `
+        <div class="mb-4">
+            <h6><i class="fas fa-phone me-2"></i>Phone Information</h6>
+            <div class="row">
+                <div class="col-sm-6"><strong>Valid:</strong> ${data.is_valid ? 'Yes' : 'No'}</div>
+                <div class="col-sm-6"><strong>Type:</strong> ${data.number_type || 'N/A'}</div>
+                <div class="col-sm-6"><strong>Country:</strong> ${location.country || 'N/A'}</div>
+                <div class="col-sm-6"><strong>Carrier:</strong> ${carrier.name || 'N/A'}</div>
+                <div class="col-sm-6"><strong>International:</strong> ${data.formatted_international || 'N/A'}</div>
+                <div class="col-sm-6"><strong>National:</strong> ${data.formatted_national || 'N/A'}</div>
+            </div>
+        </div>
+    `;
+}
+</script>
+{% endblock %} 

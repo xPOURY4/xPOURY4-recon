@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - xPOURY4 Recon{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-cog me-3"></i>
+                    Settings & Configuration
+                </h1>
+                <p class="lead">Configure API keys and application settings</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-key me-2"></i>API Keys</h5>
+            </div>
+            <div class="card-body">
+                <form id="apiKeysForm">
+                    <div class="mb-3">
+                        <label for="github_token" class="form-label">GitHub Token</label>
+                        <input type="password" class="form-control" id="github_token" name="github_token" 
+                               placeholder="Enter GitHub personal access token">
+                        <div class="form-text">Required for GitHub reconnaissance module</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="shodan_api_key" class="form-label">Shodan API Key</label>
+                        <input type="password" class="form-control" id="shodan_api_key" name="shodan_api_key" 
+                               placeholder="Enter Shodan API key">
+                        <div class="form-text">Required for Shodan intelligence module</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="virustotal_api_key" class="form-label">VirusTotal API Key</label>
+                        <input type="password" class="form-control" id="virustotal_api_key" name="virustotal_api_key" 
+                               placeholder="Enter VirusTotal API key">
+                        <div class="form-text">Optional for enhanced domain analysis</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Save API Keys
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-sliders-h me-2"></i>Application Settings</h5>
+            </div>
+            <div class="card-body">
+                <form id="settingsForm">
+                    <div class="mb-3">
+                        <label for="timeout" class="form-label">Request Timeout (seconds)</label>
+                        <input type="number" class="form-control" id="timeout" name="timeout" min="5" max="300" value="30">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="max_retries" class="form-label">Max Retries</label>
+                        <input type="number" class="form-control" id="max_retries" name="max_retries" min="1" max="10" value="3">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="rate_limit_delay" class="form-label">Rate Limit Delay (seconds)</label>
+                        <input type="number" class="form-control" id="rate_limit_delay" name="rate_limit_delay" 
+                               min="0.1" max="10" step="0.1" value="1.0">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="save_results" name="save_results" checked>
+                            <label class="form-check-label" for="save_results">
+                                Save results to files
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Save Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>API Key Setup Guide</h5>
+            </div>
+            <div class="card-body">
+                <h6>GitHub Token:</h6>
+                <ol>
+                    <li>Go to GitHub Settings → Developer settings → Personal access tokens</li>
+                    <li>Generate new token with 'public_repo' scope</li>
+                    <li>Copy and paste the token above</li>
+                </ol>
+                
+                <h6 class="mt-3">Shodan API Key:</h6>
+                <ol>
+                    <li>Create account at <a href="https://shodan.io" target="_blank">shodan.io</a></li>
+                    <li>Go to Account → API Key</li>
+                    <li>Copy and paste the API key above</li>
+                </ol>
+                
+                <h6 class="mt-3">VirusTotal API Key:</h6>
+                <ol>
+                    <li>Create account at <a href="https://virustotal.com" target="_blank">virustotal.com</a></li>
+                    <li>Go to Profile → API Key</li>
+                    <li>Copy and paste the API key above</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load current configuration
+async function loadConfiguration() {
+    try {
+        const response = await fetch('/api/config');
+        const config = await response.json();
+        
+        // Load API keys (they will show as configured/not configured)
+        if (config.api_keys) {
+            for (const [key, value] of Object.entries(config.api_keys)) {
+                const input = document.getElementById(key);
+                if (input && value && value !== '') {
+                    input.placeholder = '***CONFIGURED***';
+                }
+            }
+        }
+        
+        // Load settings
+        if (config.settings) {
+            document.getElementById('timeout').value = config.settings.timeout || 30;
+            document.getElementById('max_retries').value = config.settings.max_retries || 3;
+            document.getElementById('rate_limit_delay').value = config.settings.rate_limit_delay || 1.0;
+            document.getElementById('save_results').checked = config.settings.save_results !== false;
+        }
+        
+    } catch (error) {
+        showAlert(`Failed to load configuration: ${error.message}`, 'danger');
+    }
+}
+
+// Save API keys
+document.getElementById('apiKeysForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const apiKeys = {};
+    const inputs = ['github_token', 'shodan_api_key', 'virustotal_api_key'];
+    
+    inputs.forEach(inputId => {
+        const value = document.getElementById(inputId).value;
+        if (value && value.trim() !== '') {
+            apiKeys[inputId] = value.trim();
+        }
+    });
+    
+    if (Object.keys(apiKeys).length === 0) {
+        showAlert('Please enter at least one API key!', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                api_keys: apiKeys
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            showAlert('API keys saved successfully!', 'success');
+            // Clear the form and reload configuration
+            document.getElementById('apiKeysForm').reset();
+            setTimeout(loadConfiguration, 1000);
+        } else {
+            showAlert(`Failed to save API keys: ${result.error}`, 'danger');
+        }
+    } catch (error) {
+        showAlert(`Error saving API keys: ${error.message}`, 'danger');
+    }
+});
+
+// Save settings
+document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const settings = {
+        timeout: parseInt(document.getElementById('timeout').value),
+        max_retries: parseInt(document.getElementById('max_retries').value),
+        rate_limit_delay: parseFloat(document.getElementById('rate_limit_delay').value),
+        save_results: document.getElementById('save_results').checked
+    };
+    
+    try {
+        const response = await fetch('/api/config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                settings: settings
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            showAlert('Settings saved successfully!', 'success');
+        } else {
+            showAlert(`Failed to save settings: ${result.error}`, 'danger');
+        }
+    } catch (error) {
+        showAlert(`Error saving settings: ${error.message}`, 'danger');
+    }
+});
+
+// Load configuration on page load
+document.addEventListener('DOMContentLoaded', loadConfiguration);
+</script>
+{% endblock %} 

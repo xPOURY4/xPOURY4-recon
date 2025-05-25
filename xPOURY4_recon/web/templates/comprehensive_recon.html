@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Comprehensive Reconnaissance - xPOURY4 Recon{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-layer-group me-3"></i>
+                    Unified Intelligence Operations
+                </h1>
+                <p class="lead">Multi-vector intelligence gathering with automated correlation analysis</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-search me-2"></i>Investigation Form</h5>
+            </div>
+            <div class="card-body">
+                <form id="comprehensiveForm">
+                    <div class="mb-3">
+                        <label for="github_username" class="form-label">GitHub Username (Optional)</label>
+                        <input type="text" class="form-control" id="github_username" name="github_username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="domain" class="form-label">Domain (Optional)</label>
+                        <input type="text" class="form-control" id="domain" name="domain">
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone_number" class="form-label">Phone Number (Optional)</label>
+                        <input type="text" class="form-control" id="phone_number" name="phone_number">
+                    </div>
+                    <div class="mb-3">
+                        <label for="linkedin_name" class="form-label">LinkedIn Name (Optional)</label>
+                        <input type="text" class="form-control" id="linkedin_name" name="linkedin_name" 
+                               placeholder="First Last">
+                    </div>
+                    <div class="mb-3">
+                        <label for="shodan_target" class="form-label">Shodan Target (Optional)</label>
+                        <input type="text" class="form-control" id="shodan_target" name="shodan_target">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Start Comprehensive Investigation
+                    </button>
+                </form>
+                
+                <div id="loadingSpinner" class="loading-spinner text-center mt-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Running comprehensive investigation...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Results Summary</h5>
+            </div>
+            <div class="card-body">
+                <div id="results" style="display: none;">
+                    <div id="summaryInfo"></div>
+                    <div id="findingsInfo"></div>
+                </div>
+                <div id="noResults" class="text-center text-muted">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    <p>No results yet. Fill at least one field and start investigation.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('comprehensiveForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const targets = {};
+    const github_username = document.getElementById('github_username').value;
+    const domain = document.getElementById('domain').value;
+    const phone_number = document.getElementById('phone_number').value;
+    const linkedin_name = document.getElementById('linkedin_name').value;
+    const shodan_target = document.getElementById('shodan_target').value;
+    
+    if (github_username) targets.github_username = github_username;
+    if (domain) targets.domain = domain;
+    if (phone_number) targets.phone_number = phone_number;
+    if (linkedin_name) targets.linkedin_name = linkedin_name;
+    if (shodan_target) targets.shodan_target = shodan_target;
+    
+    if (Object.keys(targets).length === 0) {
+        showAlert('Please fill at least one target field!', 'warning');
+        return;
+    }
+    
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const results = document.getElementById('results');
+    const noResults = document.getElementById('noResults');
+    
+    loadingSpinner.style.display = 'block';
+    results.style.display = 'none';
+    noResults.style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/comprehensive/investigate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ targets: targets })
+        });
+        
+        const data = await response.json();
+        loadingSpinner.style.display = 'none';
+        
+        if (data.results) {
+            displayResults(data);
+            results.style.display = 'block';
+            showAlert('Comprehensive investigation completed!', 'success');
+        } else {
+            showAlert('Investigation failed or returned no results', 'danger');
+            noResults.style.display = 'block';
+        }
+    } catch (error) {
+        loadingSpinner.style.display = 'none';
+        noResults.style.display = 'block';
+        showAlert(`Error: ${error.message}`, 'danger');
+    }
+});
+
+function displayResults(data) {
+    const summary = data.summary || {};
+    const results = data.results || {};
+    
+    document.getElementById('summaryInfo').innerHTML = `
+        <div class="mb-4">
+            <h6><i class="fas fa-chart-pie me-2"></i>Investigation Summary</h6>
+            <div class="row">
+                <div class="col-sm-6"><strong>Modules Run:</strong> ${summary.total_modules_run || 0}</div>
+                <div class="col-sm-6"><strong>Successful:</strong> ${summary.successful_modules?.length || 0}</div>
+                <div class="col-sm-6"><strong>Failed:</strong> ${summary.failed_modules?.length || 0}</div>
+                <div class="col-sm-6"><strong>Key Findings:</strong> ${summary.key_findings?.length || 0}</div>
+            </div>
+        </div>
+    `;
+    
+    if (summary.key_findings && summary.key_findings.length > 0) {
+        const findingsList = summary.key_findings.map(finding => `
+            <li class="list-group-item">${finding}</li>
+        `).join('');
+        
+        document.getElementById('findingsInfo').innerHTML = `
+            <div class="mb-4">
+                <h6><i class="fas fa-lightbulb me-2"></i>Key Findings</h6>
+                <ul class="list-group">
+                    ${findingsList}
+                </ul>
+            </div>
+        `;
+    }
+    
+    // Show module status
+    if (summary.successful_modules && summary.successful_modules.length > 0) {
+        const successList = summary.successful_modules.map(module => `
+            <span class="badge bg-success me-1">${module}</span>
+        `).join('');
+        
+        document.getElementById('findingsInfo').innerHTML += `
+            <div class="mb-4">
+                <h6><i class="fas fa-check-circle me-2"></i>Successful Modules</h6>
+                <div>${successList}</div>
+            </div>
+        `;
+    }
+    
+    if (summary.failed_modules && summary.failed_modules.length > 0) {
+        const failedList = summary.failed_modules.map(module => `
+            <span class="badge bg-danger me-1">${module}</span>
+        `).join('');
+        
+        document.getElementById('findingsInfo').innerHTML += `
+            <div class="mb-4">
+                <h6><i class="fas fa-times-circle me-2"></i>Failed Modules</h6>
+                <div>${failedList}</div>
+            </div>
+        `;
+    }
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Error {{ error_code }} - xPOURY4 Recon{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <h1 class="display-1 text-danger">{{ error_code }}</h1>
+                <h2 class="mb-4">{{ error_message }}</h2>
+                
+                {% if error_code == 404 %}
+                    <p class="lead">The page you're looking for doesn't exist.</p>
+                    <p>It might have been moved, deleted, or you entered the wrong URL.</p>
+                {% elif error_code == 500 %}
+                    <p class="lead">Something went wrong on our end.</p>
+                    <p>We're working to fix this issue. Please try again later.</p>
+                {% else %}
+                    <p class="lead">An unexpected error occurred.</p>
+                {% endif %}
+                
+                <div class="mt-4">
+                    <a href="/" class="btn btn-primary me-2">
+                        <i class="fas fa-home me-2"></i>Go Home
+                    </a>
+                    <button onclick="history.back()" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Go Back
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

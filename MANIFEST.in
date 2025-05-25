@@ -1,0 +1,13 @@
+include README.md
+include LICENSE
+include requirements.txt
+include config.yaml
+include main.py
+recursive-include xPOURY4_recon/web/templates *.html
+recursive-include xPOURY4_recon *.py
+recursive-include screenshots *.png *.jpg *.jpeg *.gif
+include screenshots/README.md
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude *.log
+global-exclude .git* 

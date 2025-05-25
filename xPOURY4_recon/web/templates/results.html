@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Results - xPOURY4 Recon{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-chart-bar me-3"></i>
+                    Investigation Results
+                </h1>
+                <p class="lead">View and export your reconnaissance results</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-database me-2"></i>Current Results</h5>
+                <button id="refreshResults" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-sync-alt me-1"></i>Refresh
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="resultsContainer">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-spinner fa-spin fa-3x mb-3"></i>
+                        <p>Loading results...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadResults() {
+    try {
+        const response = await fetch('/api/results');
+        const data = await response.json();
+        
+        const container = document.getElementById('resultsContainer');
+        
+        if (Object.keys(data).length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    <p>No results available. Run some investigations first!</p>
+                    <a href="/" class="btn btn-primary">Go to Dashboard</a>
+                </div>
+            `;
+            return;
+        }
+        
+        let resultsHtml = '';
+        
+        for (const [module, result] of Object.entries(data)) {
+            const status = result.success ? 'success' : 'danger';
+            const icon = result.success ? 'check-circle' : 'times-circle';
+            
+            resultsHtml += `
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="fas fa-${icon} text-${status} me-2"></i>
+                            ${module.toUpperCase()} Investigation
+                        </h6>
+                        <small class="text-muted">${result.timestamp || 'N/A'}</small>
+                    </div>
+                    <div class="card-body">
+                        ${result.success ? 
+                            `<div class="alert alert-success">Investigation completed successfully</div>` :
+                            `<div class="alert alert-danger">Investigation failed: ${result.error || 'Unknown error'}</div>`
+                        }
+                        
+                        ${result.success && result.data ? `
+                            <div class="mt-3">
+                                <h6>Data Preview:</h6>
+                                <div class="json-viewer" style="max-height: 200px; overflow-y: auto;">
+                                    ${JSON.stringify(result.data, null, 2)}
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="mt-3">
+                            <button class="btn btn-sm btn-outline-primary" onclick="exportResult('${module}')">
+                                <i class="fas fa-download me-1"></i>Export JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        container.innerHTML = resultsHtml;
+        
+    } catch (error) {
+        document.getElementById('resultsContainer').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Failed to load results: ${error.message}
+            </div>
+        `;
+    }
+}
+
+function exportResult(module) {
+    fetch('/api/results')
+        .then(response => response.json())
+        .then(data => {
+            if (data[module]) {
+                const blob = new Blob([JSON.stringify(data[module], null, 2)], {
+                    type: 'application/json'
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${module}_results_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showAlert(`${module} results exported successfully!`, 'success');
+            }
+        })
+        .catch(error => {
+            showAlert(`Export failed: ${error.message}`, 'danger');
+        });
+}
+
+document.getElementById('refreshResults').addEventListener('click', loadResults);
+
+// Load results on page load
+document.addEventListener('DOMContentLoaded', loadResults);
+</script>
+{% endblock %} 

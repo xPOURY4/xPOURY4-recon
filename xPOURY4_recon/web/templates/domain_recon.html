@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Domain Reconnaissance - xPOURY4 Recon{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-globe me-3"></i>
+                    Domain Forensics
+                </h1>
+                <p class="lead">Comprehensive domain intelligence and infrastructure analysis</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-search me-2"></i>Investigation Form</h5>
+            </div>
+            <div class="card-body">
+                <form id="domainForm">
+                    <div class="mb-3">
+                        <label for="domain" class="form-label">Domain Name</label>
+                        <input type="text" class="form-control" id="domain" name="domain" 
+                               placeholder="example.com" required>
+                        <div class="form-text">Enter the domain name to investigate</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Start Investigation
+                    </button>
+                </form>
+                
+                <div id="loadingSpinner" class="loading-spinner text-center mt-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Investigating domain...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Information</h5>
+            </div>
+            <div class="card-body">
+                <h6>Forensic Capabilities:</h6>
+                <ul>
+                    <li>Advanced WHOIS intelligence with historical data analysis</li>
+                    <li>Comprehensive DNS record enumeration and zone analysis</li>
+                    <li>Automated subdomain discovery using multiple techniques</li>
+                    <li>SSL/TLS certificate forensics and trust chain analysis</li>
+                    <li>Domain reputation assessment and threat intelligence</li>
+                    <li>Infrastructure fingerprinting and technology stack identification</li>
+                    <li>Passive DNS analysis and domain relationship mapping</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Results</h5>
+            </div>
+            <div class="card-body">
+                <div id="results" style="display: none;">
+                    <div id="whoisInfo"></div>
+                    <div id="subdomainsInfo"></div>
+                    <div id="sslInfo"></div>
+                </div>
+                <div id="noResults" class="text-center text-muted">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    <p>No results yet. Start an investigation to see data here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('domainForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const domain = document.getElementById('domain').value;
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const results = document.getElementById('results');
+    const noResults = document.getElementById('noResults');
+    
+    loadingSpinner.style.display = 'block';
+    results.style.display = 'none';
+    noResults.style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/domain/investigate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ domain: domain })
+        });
+        
+        const data = await response.json();
+        loadingSpinner.style.display = 'none';
+        
+        if (data.success) {
+            displayResults(data.data);
+            results.style.display = 'block';
+            showAlert('Domain investigation completed successfully!', 'success');
+        } else {
+            showAlert(`Investigation failed: ${data.error}`, 'danger');
+            noResults.style.display = 'block';
+        }
+    } catch (error) {
+        loadingSpinner.style.display = 'none';
+        noResults.style.display = 'block';
+        showAlert(`Error: ${error.message}`, 'danger');
+    }
+});
+
+function displayResults(data) {
+    const whois = data.whois || {};
+    const subdomains = data.subdomains || {};
+    const ssl = data.ssl_certificate || {};
+    
+    document.getElementById('whoisInfo').innerHTML = `
+        <div class="mb-4">
+            <h6><i class="fas fa-info me-2"></i>WHOIS Information</h6>
+            <div class="row">
+                <div class="col-sm-6"><strong>Registrar:</strong> ${whois.registrar || 'N/A'}</div>
+                <div class="col-sm-6"><strong>Created:</strong> ${whois.creation_date || 'N/A'}</div>
+                <div class="col-sm-6"><strong>Expires:</strong> ${whois.expiration_date || 'N/A'}</div>
+                <div class="col-sm-6"><strong>Country:</strong> ${whois.country || 'N/A'}</div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('subdomainsInfo').innerHTML = `
+        <div class="mb-4">
+            <h6><i class="fas fa-sitemap me-2"></i>Subdomains (${subdomains.count || 0} found)</h6>
+            ${subdomains.subdomains && subdomains.subdomains.length > 0 ? 
+                `<div class="json-viewer">${subdomains.subdomains.slice(0, 10).join('\n')}</div>` :
+                '<p class="text-muted">No subdomains found</p>'
+            }
+        </div>
+    `;
+    
+    if (ssl.subject) {
+        document.getElementById('sslInfo').innerHTML = `
+            <div class="mb-4">
+                <h6><i class="fas fa-lock me-2"></i>SSL Certificate</h6>
+                <div class="row">
+                    <div class="col-sm-6"><strong>Issuer:</strong> ${ssl.issuer?.organizationName || 'N/A'}</div>
+                    <div class="col-sm-6"><strong>Valid Until:</strong> ${ssl.not_after || 'N/A'}</div>
+                </div>
+            </div>
+        `;
+    }
+}
+</script>
+{% endblock %} 
