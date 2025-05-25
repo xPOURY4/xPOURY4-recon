@@ -12,26 +12,6 @@
 ![Main Dashboard](screenshots/dashboard.png)
 *Modern cybersecurity-themed dashboard with real-time intelligence modules*
 
-### 🐙 GitHub Intelligence Module
-![GitHub Recon](screenshots/github-recon.png)
-*Deep-dive developer profiling and repository forensics*
-
-### 🌍 Domain Forensics Module
-![Domain Recon](screenshots/domain-recon.png)
-*Comprehensive domain analysis and infrastructure mapping*
-
-### 📱 Telecommunications Intelligence
-![Phone Recon](screenshots/phone-recon.png)
-*Advanced phone number analysis and carrier identification*
-
-### 💼 Professional Network Intelligence
-![LinkedIn Recon](screenshots/linkedin-recon.png)
-*Strategic LinkedIn reconnaissance and corporate intelligence*
-
-### 🔍 Cyber Asset Discovery
-![Shodan Recon](screenshots/shodan-recon.png)
-*Internet-wide device enumeration and vulnerability assessment*
-
 ### ⚙️ Configuration Management
 ![Settings](screenshots/settings.png)
 *Secure API key management and system configuration*
